@@ -134,6 +134,9 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# Model cache (HuggingFace / Whisper) - 数百MB のモデルファイルを除外
+cache/
+
 # Environments
 .env
 .envrc

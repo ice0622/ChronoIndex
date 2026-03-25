@@ -39,19 +39,37 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
     # -------------------------------------------------------
     if url:
         logger.info(f"[Step 1] 音声ダウンロード: {url}")
-        # TODO: Phase 1 で実装
-        # from src.extract_audio import extract_audio
-        # audio = extract_audio(url, output_dir=cfg.data_dir / "audio")
-        logger.warning("extract_audio は未実装です（Phase 1 で実装予定）")
-        return
+        from src.extract_audio import extract_audio
+        audio_info = extract_audio(url, output_dir=cfg.data_dir / "audio")
+        audio = str(audio_info.path)
+        logger.info(f"  → {audio_info.title} ({audio_info.duration_sec}秒) 保存先: {audio}")
 
     # -------------------------------------------------------
     # Step 2: 音声認識（ASR）
     # -------------------------------------------------------
     logger.info(f"[Step 2] 音声認識: {audio}")
-    # TODO: Phase 1 で実装
-    # from src.transcribe import transcribe
-    # transcript = transcribe(audio, cfg)
+    # TODO: Phase 1 Step 2 で実装
+
+    # -------------------------------------------------------
+    # Step 2: 音声認識（ASR）
+    # -------------------------------------------------------
+    logger.info(f"[Step 2] 音声認識: {audio}")
+    from src.transcribe import transcribe
+    from pathlib import Path
+    transcript = transcribe(Path(audio), cfg)
+    logger.info(f"  → {len(transcript.segments)}セグメント / 総時間: {transcript.duration_sec/60:.1f}分")
+
+    if dry_run:
+        logger.info("[dry-run] ここで停止（LLM処理はスキップ）")
+        # 最初の10セグメントを表示してトランスクリプトを確認
+        for seg in transcript.segments[:10]:
+            print(f"  {seg.to_timestamp()}  {seg.text.strip()}")
+        return
+
+    # -------------------------------------------------------
+    # Step 3: セグメント境界検出 + 種別分類
+    # -------------------------------------------------------
+    # TODO: Phase 1 Step 3 で実装
 
     # -------------------------------------------------------
     # Step 3: セグメント境界検出 + 種別分類

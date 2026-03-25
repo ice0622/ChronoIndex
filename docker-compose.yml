@@ -11,6 +11,9 @@ services:
     container_name: chronoindex_dev
     env_file:
       - .env
+    environment:
+      # /app は chronouser 所有なので権限エラーが起きない
+      - HF_HOME=/app/.cache/huggingface
     volumes:
       # ソースコードをリアルタイムで反映（編集したら即有効）
       - ./src:/app/src
@@ -18,10 +21,9 @@ services:
       - ./tasks:/app/tasks
       # データの永続化（音声・文字起こし・出力ファイル）
       - ./data:/app/data
-      # HuggingFace モデルキャッシュの永続化（再ダウンロード防止）
-      - huggingface_cache:/home/chronouser/.cache/huggingface
-      # faster-whisper モデルキャッシュ
-      - whisper_cache:/home/chronouser/.cache/whisper
+      # HuggingFace / Whisper モデルキャッシュ（bind mountで権限問題を回避）
+      - ./cache/huggingface:/app/.cache/huggingface
+      - ./cache/whisper:/app/.cache/whisper
     working_dir: /app
     stdin_open: true
     tty: true
@@ -49,10 +51,8 @@ services:
     volumes:
       - ./src:/app/src
       - ./data:/app/data
-      - huggingface_cache:/home/chronouser/.cache/huggingface
-      - whisper_cache:/home/chronouser/.cache/whisper
+      - ./cache/huggingface:/app/.cache/huggingface
+      - ./cache/whisper:/app/.cache/whisper
     command: ["python", "-m", "src.pipeline"]
 
-volumes:
-  huggingface_cache:
-  whisper_cache:
+volumes: {}

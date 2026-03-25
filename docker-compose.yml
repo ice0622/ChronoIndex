@@ -1,0 +1,58 @@
+services:
+  # -------------------------------------------------------
+  # 開発用インタラクティブシェル
+  # docker compose run --rm dev bash
+  # -------------------------------------------------------
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chronoindex:latest
+    container_name: chronoindex_dev
+    env_file:
+      - .env
+    volumes:
+      # ソースコードをリアルタイムで反映（編集したら即有効）
+      - ./src:/app/src
+      - ./evaluate:/app/evaluate
+      - ./tasks:/app/tasks
+      # データの永続化（音声・文字起こし・出力ファイル）
+      - ./data:/app/data
+      # HuggingFace モデルキャッシュの永続化（再ダウンロード防止）
+      - huggingface_cache:/home/chronouser/.cache/huggingface
+      # faster-whisper モデルキャッシュ
+      - whisper_cache:/home/chronouser/.cache/whisper
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    # GPU 環境に移行する場合は以下をコメントアウト解除
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # -------------------------------------------------------
+  # パイプライン実行（CLIで直接動画URLを処理する用途）
+  # docker compose run --rm pipeline <YouTube_URL>
+  # -------------------------------------------------------
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chronoindex:latest
+    container_name: chronoindex_pipeline
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - huggingface_cache:/home/chronouser/.cache/huggingface
+      - whisper_cache:/home/chronouser/.cache/whisper
+    command: ["python", "-m", "src.pipeline"]
+
+volumes:
+  huggingface_cache:
+  whisper_cache:

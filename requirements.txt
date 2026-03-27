@@ -15,6 +15,7 @@ pyannote.audio>=3.3.2
 # ===== LLM クライアント =====
 openai>=1.40.0
 anthropic>=0.37.0
+google-genai>=1.0.0              # Gemini Flash（無料枠）
 
 # ===== 音声処理ユーティリティ =====
 pydub>=0.25.1

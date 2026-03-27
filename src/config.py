@@ -19,9 +19,11 @@ class Config(BaseSettings):
     whisper_model_size: str = Field(default="small", env="WHISPER_MODEL_SIZE")
 
     # LLM 設定
-    llm_provider:       str   = Field(default="openai",         env="LLM_PROVIDER")
+    llm_provider:       str   = Field(default="gemini",         env="LLM_PROVIDER")
     openai_model:       str   = Field(default="gpt-4o-mini",    env="OPENAI_MODEL")
     anthropic_model:    str   = Field(default="claude-3-5-haiku-20241022", env="ANTHROPIC_MODEL")
+    gemini_api_key:     str   = Field(default="",               env="GEMINI_API_KEY")
+    gemini_model:       str   = Field(default="gemini-2.0-flash-lite", env="GEMINI_MODEL")
     llm_temperature:    float = Field(default=0.1,              env="LLM_TEMPERATURE")
 
     # 処理設定

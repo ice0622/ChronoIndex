@@ -48,20 +48,12 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
     # Step 2: 音声認識（ASR）
     # -------------------------------------------------------
     logger.info(f"[Step 2] 音声認識: {audio}")
-    # TODO: Phase 1 Step 2 で実装
-
-    # -------------------------------------------------------
-    # Step 2: 音声認識（ASR）
-    # -------------------------------------------------------
-    logger.info(f"[Step 2] 音声認識: {audio}")
     from src.transcribe import transcribe
-    from pathlib import Path
     transcript = transcribe(Path(audio), cfg)
     logger.info(f"  → {len(transcript.segments)}セグメント / 総時間: {transcript.duration_sec/60:.1f}分")
 
     if dry_run:
         logger.info("[dry-run] ここで停止（LLM処理はスキップ）")
-        # 最初の10セグメントを表示してトランスクリプトを確認
         for seg in transcript.segments[:10]:
             print(f"  {seg.to_timestamp()}  {seg.text.strip()}")
         return
@@ -69,24 +61,39 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
     # -------------------------------------------------------
     # Step 3: セグメント境界検出 + 種別分類
     # -------------------------------------------------------
-    # TODO: Phase 1 Step 3 で実装
-
-    # -------------------------------------------------------
-    # Step 3: セグメント境界検出 + 種別分類
-    # -------------------------------------------------------
-    # TODO: Phase 1 で実装
+    logger.info("[Step 3] 境界検出")
+    from src.detect_boundaries import detect_boundaries, SegmentKind
+    detected_segments = detect_boundaries(transcript, cfg)
+    content_segments = [s for s in detected_segments if s.kind == SegmentKind.CONTENT]
+    logger.info(f"  → CONTENT={len(content_segments)}件 / 全{len(detected_segments)}件")
 
     # -------------------------------------------------------
     # Step 4: LLM によるチャプタータイトル生成
     # -------------------------------------------------------
-    # TODO: Phase 1 で実装
+    logger.info("[Step 4] チャプタータイトル生成")
+    from src.generate_chapters import generate_chapters
+    chapters = generate_chapters(content_segments, cfg)
+    logger.info(f"  → {len(chapters)}チャプター生成完了")
 
     # -------------------------------------------------------
-    # Step 5: YouTube 形式への整形・バリデーション・出力
+    # Step 5: YouTube 形式への整形・出力
     # -------------------------------------------------------
-    # TODO: Phase 1 で実装
+    logger.info("[Step 5] 出力")
+    lines = [f"{ch.timestamp}  {ch.title}" for ch in chapters]
+    result_text = "\n".join(lines)
 
-    logger.info("パイプライン完了（スケルトン: 実際の処理は Phase 1 で実装予定）")
+    print("\n" + "=" * 50)
+    print("# チャプターリスト（YouTube 概要欄用）")
+    print("=" * 50)
+    print(result_text)
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(result_text, encoding="utf-8")
+        logger.success(f"保存完了: {output}")
+
+    logger.success("パイプライン完了")
 
 
 if __name__ == "__main__":

@@ -13,17 +13,23 @@ class Config(BaseSettings):
     openai_api_key:     str = Field(default="", env="OPENAI_API_KEY")
     anthropic_api_key:  str = Field(default="", env="ANTHROPIC_API_KEY")
     huggingface_token:  str = Field(default="", env="HUGGINGFACE_TOKEN")
+    groq_api_key:       str = Field(default="", env="GROQ_API_KEY")  # Groq Whisper API（無料・高速）
 
     # ASR 設定
-    asr_mode:           str = Field(default="api",   env="ASR_MODE")
+    # asr_mode: "groq"(推奨・無料・高速) | "api"(OpenAI有料) | "local"(ローカルCPU)
+    asr_mode:           str = Field(default="groq",  env="ASR_MODE")
     whisper_model_size: str = Field(default="small", env="WHISPER_MODEL_SIZE")
+    # Groq Whisper モデル選択
+    # whisper-large-v3-turbo: 最速・精度十分（推奨）
+    # whisper-large-v3: 最高精度・やや遅い
+    groq_whisper_model: str = Field(default="whisper-large-v3-turbo", env="GROQ_WHISPER_MODEL")
 
     # LLM 設定
     llm_provider:       str   = Field(default="gemini",         env="LLM_PROVIDER")
     openai_model:       str   = Field(default="gpt-4o-mini",    env="OPENAI_MODEL")
     anthropic_model:    str   = Field(default="claude-3-5-haiku-20241022", env="ANTHROPIC_MODEL")
     gemini_api_key:     str   = Field(default="",               env="GEMINI_API_KEY")
-    gemini_model:       str   = Field(default="gemini-2.0-flash-lite", env="GEMINI_MODEL")
+    gemini_model:       str   = Field(default="gemini-2.5-flash", env="GEMINI_MODEL")
     llm_temperature:    float = Field(default=0.1,              env="LLM_TEMPERATURE")
 
     # 処理設定

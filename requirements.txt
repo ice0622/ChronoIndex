@@ -2,33 +2,22 @@
 yt-dlp>=2024.12.0
 
 # ===== 音声認識（ASR）=====
-# faster-whisper: CPU でも実用速度で動く Whisper 実装（CTranslate2 バックエンド）
-faster-whisper>=1.1.0
-
-# WhisperX: タイムスタンプ精度向上 + 話者ダイアライゼーション統合
-# 注: pyannote.audio への依存あり、HuggingFace トークンが必要
-# whisperx>=3.1.0  # GPU環境に移行したら有効化
-
-# ===== 話者ダイアライゼーション =====
-pyannote.audio>=3.3.2
+# Groq Whisper API（ASR_MODE=groq・デフォルト）: 無料・7,200分/日・超高速
+groq>=0.8.0
+# OpenAI Whisper API（ASR_MODE=api）: 有料フォールバック
+openai>=1.40.0
+#
+# ローカル実行（ASR_MODE=local）が必要な場合は requirements-local.txt を使うこと:
+#   pip install -r requirements-local.txt
+# ※ torch(2GB+) / faster-whisper / pyannote.audio が入るため非常に重い
 
 # ===== LLM クライアント =====
-openai>=1.40.0
 anthropic>=0.37.0
-google-genai>=1.0.0              # Gemini Flash（無料枠）
+google-genai>=1.0.0              # Gemini Flash（無料枠・デフォルト）
 
 # ===== 音声処理ユーティリティ =====
-pydub>=0.25.1
-ffmpeg-python>=0.2.0
+# pydub は OOM（メモリ不足）の原因になるため削除。チャンク分割は ffmpeg コマンドで実施。
 numpy>=1.26.0
-scipy>=1.13.0
-
-# ===== テキスト処理 =====
-regex>=2024.9.11
-spacy>=3.7.0         # NER（エンティティ認識）
-
-# ===== 評価指標 =====
-jiwer>=3.0.0         # WER / CER 計測
 
 # ===== 環境変数 =====
 python-dotenv>=1.0.0
@@ -37,12 +26,13 @@ python-dotenv>=1.0.0
 tqdm>=4.66.0
 loguru>=0.7.0
 pydantic>=2.8.0
-pydantic-settings>=2.4.0  # .env ファイルからの設定管理
-click>=8.1.0          # CLIインターフェース用
+pydantic-settings>=2.4.0
+click>=8.1.0
 requests>=2.32.0
 
 # ===== 開発・テスト =====
 pytest>=8.3.0
 pytest-asyncio>=0.24.0
 black>=24.0.0
+ruff>=0.6.0
 ruff>=0.6.0

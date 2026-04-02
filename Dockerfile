@@ -2,13 +2,12 @@ FROM python:3.11-slim
 
 # --------------------
 # システム依存パッケージ
+# ffmpeg: 音声変換に必須 / curl: ヘルスチェック用
+# build-essential・libsndfile1 は ASR_MODE=groq では不要なので除外
 # --------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    git \
     curl \
-    build-essential \
-    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
 # --------------------
@@ -22,24 +21,16 @@ WORKDIR /app
 RUN pip install --upgrade pip
 
 # --------------------
-# PyTorch CPU-only インストール（GPU なし環境用）
-# GPU 環境に移行する場合は --index-url を削除して nvidia base image に切り替える
+# NOTE: PyTorch は ASR_MODE=groq では不要なため除外。
+# ローカル Whisper（ASR_MODE=local）に戻す場合は
+# requirements-local.txt を pip install すること。
 # --------------------
-RUN pip install --no-cache-dir \
-    torch==2.4.1 \
-    torchaudio==2.4.1 \
-    --index-url https://download.pytorch.org/whl/cpu
 
 # --------------------
 # requirements.txt のインストール
 # --------------------
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# --------------------
-# spaCy 日本語モデルのダウンロード
-# --------------------
-RUN python -m spacy download ja_core_news_sm
 
 # --------------------
 # ソースコードのコピー

@@ -1,0 +1,23 @@
+# ===================================
+# ローカル Whisper 実行用の追加依存
+# ASR_MODE=local のときのみ必要
+# ===================================
+# 使い方（ホスト環境で直接実行する場合）:
+#   pip install -r requirements.txt
+#   pip install -r requirements-local.txt
+#
+# Docker で使う場合: Dockerfile 内の torch インストール行のコメントを外す
+# ===================================
+
+# faster-whisper: CPU でも実用速度で動く Whisper 実装
+faster-whisper>=1.1.0
+# → 内部で ctranslate2 を使用（約300MB）
+
+# PyTorch CPU-only（faster-whisper の依存）
+# インストールコマンド（直接実行が必要）:
+#   pip install torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+# → 約2.4GB
+
+# 話者ダイアライゼーション（将来実装予定）:
+#   pyannote.audio>=3.3.2
+#   ※ requires HuggingFace token + torch

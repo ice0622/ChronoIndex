@@ -43,6 +43,13 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
         audio_info = extract_audio(url, output_dir=cfg.data_dir / "audio")
         audio = str(audio_info.path)
         logger.info(f"  → {audio_info.title} ({audio_info.duration_sec}秒) 保存先: {audio}")
+        # --output 未指定時は動画タイトルをファイル名に使う
+        if output is None and not dry_run:
+            output = str(cfg.data_dir / "output" / f"{audio_info.title}.txt")
+
+    # --audio 直接指定かつ --output 未指定の場合もファイル名から自動生成
+    if audio and output is None and not dry_run:
+        output = str(cfg.data_dir / "output" / f"{Path(audio).stem}.txt")
 
     # -------------------------------------------------------
     # Step 2: 音声認識（ASR）
@@ -51,6 +58,14 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
     from src.transcribe import transcribe
     transcript = transcribe(Path(audio), cfg)
     logger.info(f"  → {len(transcript.segments)}セグメント / 総時間: {transcript.duration_sec/60:.1f}分")
+
+    # 文字起こしをテキストファイルに保存（タイムスタンプ付き）
+    transcript_title = audio_info.title if url else Path(audio).stem
+    transcript_txt_path = cfg.data_dir / "transcripts" / f"{transcript_title}.txt"
+    transcript_txt_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"{seg.to_timestamp()}  {seg.text.strip()}" for seg in transcript.segments]
+    transcript_txt_path.write_text("\n".join(lines), encoding="utf-8")
+    logger.info(f"  → 文字起こしテキスト保存: {transcript_txt_path}")
 
     if dry_run:
         logger.info("[dry-run] ここで停止（LLM処理はスキップ）")

@@ -43,16 +43,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. ベースイメージ（chronoindex:latest）をビルド
-      #    Dockerfile.diarize が FROM chronoindex:latest を参照するため先にビルドする
-      - name: Build base image
+      # 4. ベースイメージ（chronoindex:latest）をビルドして GHCR に push
+      #    Dockerfile.diarize が FROM ghcr.io/ice0622/chronoindex:latest を参照するため先にビルドする
+      #    ※ setup-buildx-action は docker-container ドライバを使うため、
+      #       load: true でホスト側に読み込んでも次ステップのビルダーからは
+      #       アクセスできない。GHCR 経由で共有するのが正しい方法。
+      - name: Build and push base image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
-          # load=true: ローカルの Docker デーモンに読み込む（push しない）
-          load: true
-          tags: chronoindex:latest
+          push: true
+          tags: ghcr.io/ice0622/chronoindex:latest
           # GitHub Actions のキャッシュを使って再ビルドを高速化
           cache-from: type=gha,scope=base
           cache-to:   type=gha,scope=base,mode=max

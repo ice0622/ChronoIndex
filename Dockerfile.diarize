@@ -20,7 +20,7 @@
 #     --url "https://www.youtube.com/watch?v=XXXX"
 # ============================================================
 
-FROM chronoindex:latest
+FROM ghcr.io/ice0622/chronoindex:latest
 
 USER root
 

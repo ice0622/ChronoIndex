@@ -57,4 +57,37 @@ services:
       - ./cache/whisper:/app/.cache/whisper
     command: ["python", "-m", "src.pipeline"]
 
+  # -------------------------------------------------------
+  # 話者ダイアライゼーション対応版（PyTorch + pyannote.audio 入り）
+  #
+  # 初回セットアップ（PC でのビルド不要）:
+  #   docker compose pull diarize
+  #   → ghcr.io/ice0622/chronoindex:diarize を DL するだけ
+  #
+  # イメージは GitHub Actions が自動ビルド・更新する
+  #   Dockerfile.diarize を変更して push → 自動再ビルド
+  #
+  # 実行:
+  #   docker compose run --rm diarize python -m src.pipeline \
+  #     --url "https://www.youtube.com/watch?v=XXXX"
+  # -------------------------------------------------------
+  diarize:
+    image: ghcr.io/ice0622/chronoindex:diarize
+    container_name: chronoindex_diarize
+    env_file:
+      - .env
+    environment:
+      - HF_HOME=/app/.cache/huggingface
+      - PYTHONUNBUFFERED=1
+      - DIARIZATION_ENABLED=true
+    volumes:
+      - ./src:/app/src
+      - ./evaluate:/app/evaluate
+      - ./data:/app/data
+      - ./cache/huggingface:/app/.cache/huggingface
+      - ./cache/whisper:/app/.cache/whisper
+    working_dir: /app
+    stdin_open: true
+    tty: true
+
 volumes: {}

@@ -106,11 +106,21 @@ def transcribe(audio_path: Path, cfg: Config) -> Transcript:
     logger.info(f"  モード: {cfg.asr_mode} / モデル: {cfg.whisper_model_size} / 言語: {cfg.audio_language}")
 
     if cfg.asr_mode == "groq":
-        return _transcribe_groq(audio_path, cfg)
+        transcript = _transcribe_groq(audio_path, cfg)
     elif cfg.asr_mode == "api":
-        return _transcribe_via_api(audio_path, cfg)
+        transcript = _transcribe_via_api(audio_path, cfg)
     else:
-        return _transcribe_local(audio_path, cfg)
+        transcript = _transcribe_local(audio_path, cfg)
+
+    # ─── 話者ダイアライゼーション（有効な場合のみ実行）───
+    if cfg.diarization_enabled:
+        logger.info("[Optional] 話者ダイアライゼーション")
+        from src.diarize import diarize, merge_speakers  # 遅延インポート
+        diarization = diarize(audio_path, cfg)
+        merge_speakers(transcript.segments, diarization)
+        logger.info(f"  → 話者ラベルを {len(transcript.segments)}セグメントにマージ完了")
+
+    return transcript
 
 
 # ─────────────────────────────────────────

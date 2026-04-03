@@ -63,7 +63,12 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
     transcript_title = audio_info.title if url else Path(audio).stem
     transcript_txt_path = cfg.data_dir / "transcripts" / f"{transcript_title}.txt"
     transcript_txt_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [f"{seg.to_timestamp()}  {seg.text.strip()}" for seg in transcript.segments]
+    lines = [
+        f"{seg.to_timestamp()}  [{seg.speaker}] {seg.text.strip()}"
+        if seg.speaker != "UNKNOWN"
+        else f"{seg.to_timestamp()}  {seg.text.strip()}"
+        for seg in transcript.segments
+    ]
     transcript_txt_path.write_text("\n".join(lines), encoding="utf-8")
     logger.info(f"  → 文字起こしテキスト保存: {transcript_txt_path}")
 

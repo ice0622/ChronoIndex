@@ -1,0 +1,70 @@
+name: Build diarize image
+
+# ─────────────────────────────────────────
+# トリガー
+# ─────────────────────────────────────────
+on:
+  # Dockerfile.diarize か requirements-local.txt が変わったら自動ビルド
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile.diarize
+      - requirements-local.txt
+      - requirements.txt
+
+  # GitHub の Actions タブから手動実行も可能
+  workflow_dispatch:
+
+# ─────────────────────────────────────────
+# GHCR への push 権限
+# ─────────────────────────────────────────
+permissions:
+  contents: read
+  packages: write   # ghcr.io への push に必要
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest   # GitHub の無料クラウドサーバー（2コア・7GB RAM）
+
+    steps:
+      # 1. ソースコードを取得
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. BuildKit（Docker の高速ビルドエンジン）を有効化
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. GHCR にログイン（GITHUB_TOKEN は自動で設定済み・追加設定不要）
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. ベースイメージ（chronoindex:latest）をビルド
+      #    Dockerfile.diarize が FROM chronoindex:latest を参照するため先にビルドする
+      - name: Build base image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          # load=true: ローカルの Docker デーモンに読み込む（push しない）
+          load: true
+          tags: chronoindex:latest
+          # GitHub Actions のキャッシュを使って再ビルドを高速化
+          cache-from: type=gha,scope=base
+          cache-to:   type=gha,scope=base,mode=max
+
+      # 5. ダイアライゼーション対応イメージをビルド → GHCR に push
+      - name: Build and push diarize image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.diarize
+          push: true
+          tags: ghcr.io/ice0622/chronoindex:diarize
+          # GitHub Actions のキャッシュを使う（PyTorch の再DLを防ぐ）
+          cache-from: type=gha,scope=diarize
+          cache-to:   type=gha,scope=diarize,mode=max

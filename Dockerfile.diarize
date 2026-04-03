@@ -1,0 +1,58 @@
+# ============================================================
+# Dockerfile.diarize
+# ダイアライゼーション対応イメージ（chronoindex:latest を拡張）
+#
+# 【通常の chronoindex イメージとの違い】
+# - PyTorch CPU 版（約2.4GB）を追加インストール
+# - pyannote.audio を追加インストール
+# - メインの Dockerfile は軽量のまま維持できる
+#
+# 【ビルドが中断された場合の挙動】
+# BuildKit の pip キャッシュマウントを使用しているため、
+# 中断後に再実行すると途中からダウンロードが再開される。
+# （--mount=type=cache は Docker がホスト側に保持し続ける）
+#
+# ビルドコマンド:
+#   docker compose build diarize
+#
+# 実行コマンド:
+#   docker compose run --rm diarize python -m src.pipeline \
+#     --url "https://www.youtube.com/watch?v=XXXX"
+# ============================================================
+
+FROM chronoindex:latest
+
+USER root
+
+# --------------------
+# システム依存パッケージ（pyannote.audio の C 拡張ビルドに必要）
+# --------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# --------------------
+# PyTorch CPU 版（Step 1: 必ず先にインストール）
+# --mount=type=cache: ホスト側に pip キャッシュを保持する
+# → ビルドが中断されても次回は DL 済みのホイールを再利用
+# --------------------
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
+        torch==2.4.1 \
+        torchaudio==2.4.1 \
+        --index-url https://download.pytorch.org/whl/cpu
+
+# --------------------
+# requirements-local.txt（Step 2: torch インストール後に実行）
+# faster-whisper + pyannote.audio を一括インストール
+# torch は Step 1 で既にインストール済みのため PyPI 版を引かない
+# --------------------
+COPY requirements-local.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements-local.txt
+
+# --------------------
+# ユーザー権限を戻す
+# --------------------
+USER chronouser

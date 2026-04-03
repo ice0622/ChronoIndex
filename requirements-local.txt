@@ -1,23 +1,28 @@
 # ===================================
-# ローカル Whisper 実行用の追加依存
-# ASR_MODE=local のときのみ必要
+# 重量依存ライブラリ（オプション）
+# 以下のどちらかが必要な場合にインストールする:
+#   - ASR_MODE=local  （ローカル Whisper 実行）
+#   - DIARIZATION_ENABLED=true  （話者ダイアライゼーション）
 # ===================================
-# 使い方（ホスト環境で直接実行する場合）:
+#
+# 【インストール手順】
+# ⚠️  torch は PyPI 版だと GPU 版が入り数 GB になる。
+#     必ず以下の順番で実行すること:
+#
+#   # Step 1: torch CPU 版を先にインストール（必須・順番厳守）
+#   pip install torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+#
+#   # Step 2: このファイルをインストール（torch が入った後なら PyPI 版を引かない）
 #   pip install -r requirements.txt
 #   pip install -r requirements-local.txt
 #
-# Docker で使う場合: Dockerfile 内の torch インストール行のコメントを外す
+# Docker で使う場合: Dockerfile.diarize が上記手順を正しい順で自動実行する
 # ===================================
 
-# faster-whisper: CPU でも実用速度で動く Whisper 実装
+# faster-whisper: CPU でも実用速度で動く Whisper 実装（ASR_MODE=local で使用）
 faster-whisper>=1.1.0
 # → 内部で ctranslate2 を使用（約300MB）
 
-# PyTorch CPU-only（faster-whisper の依存）
-# インストールコマンド（直接実行が必要）:
-#   pip install torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu
-# → 約2.4GB
-
-# 話者ダイアライゼーション（将来実装予定）:
-#   pyannote.audio>=3.3.2
-#   ※ requires HuggingFace token + torch
+# 話者ダイアライゼーション（DIARIZATION_ENABLED=true で使用）
+# ⚠️  torch が先インストール済みの前提。上記手順を必ず守ること。
+pyannote.audio>=3.3.2

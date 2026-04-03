@@ -4,10 +4,11 @@ name: Build diarize image
 # トリガー
 # ─────────────────────────────────────────
 on:
-  # Dockerfile.diarize か requirements-local.txt が変わったら自動ビルド
+  # いずれかのファイルが変わったら自動ビルド
   push:
     branches: [main]
     paths:
+      - Dockerfile
       - Dockerfile.diarize
       - requirements-local.txt
       - requirements.txt

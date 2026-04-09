@@ -20,7 +20,8 @@
 #     --url "https://www.youtube.com/watch?v=XXXX"
 # ============================================================
 
-FROM chronoindex:latest
+ARG BASE_IMAGE=chronoindex:latest
+FROM ${BASE_IMAGE}
 
 USER root
 

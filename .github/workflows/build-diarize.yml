@@ -68,6 +68,8 @@ jobs:
           file: Dockerfile.diarize
           push: true
           tags: ghcr.io/ice0622/chronoindex:diarize
+          # ベースイメージは前ステップで push した GHCR イメージを参照する
+          build-args: BASE_IMAGE=ghcr.io/ice0622/chronoindex:latest
           # GitHub Actions のキャッシュを使う（PyTorch の再DLを防ぐ）
           cache-from: type=gha,scope=diarize
           cache-to:   type=gha,scope=diarize,mode=max

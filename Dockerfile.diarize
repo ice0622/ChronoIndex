@@ -20,12 +20,7 @@
 #     --url "https://www.youtube.com/watch?v=XXXX"
 # ============================================================
 
-FROM ghcr.io/ice0622/chronoindex:latest
-
-# torch のバージョンをここだけで管理する（CPU 版固定が必須・詳細はコメント参照）
-# CVE 対応や新機能が必要になったら TORCH_VERSION だけ更新すればよい
-# ⚠️ 変更時は https://download.pytorch.org/whl/cpu で該当バージョンの存在を確認すること
-ARG TORCH_VERSION=2.4.1
+FROM chronoindex:latest
 
 USER root
 
@@ -44,21 +39,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --------------------
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install \
-        torch==${TORCH_VERSION} \
-        torchaudio==${TORCH_VERSION} \
+        torch==2.4.1 \
+        torchaudio==2.4.1 \
         --index-url https://download.pytorch.org/whl/cpu
 
 # --------------------
 # requirements-local.txt（Step 2: torch インストール後に実行）
 # faster-whisper + pyannote.audio を一括インストール
-# --constraint: pyannote.audio が torch を upgrade しないよう固定
-# torchcodec は CUDA ライブラリ（libnppicc）が必要なため CPU 環境では除外
+# torch は Step 1 で既にインストール済みのため PyPI 版を引かない
 # --------------------
 COPY requirements-local.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
-    printf "torch==${TORCH_VERSION}+cpu\ntorchaudio==${TORCH_VERSION}+cpu\nhuggingface_hub<1.0\n" > /tmp/torch-constraints.txt && \
-    pip install -r requirements-local.txt -c /tmp/torch-constraints.txt && \
-    pip uninstall -y torchcodec 2>/dev/null || true
+    pip install -r requirements-local.txt
 
 # --------------------
 # ユーザー権限を戻す

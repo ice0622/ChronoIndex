@@ -25,7 +25,9 @@ from src.config import load_config
 @click.option("--audio",  "-a", default=None, type=click.Path(exists=False), help="既存の音声ファイルパス（yt-dlp をスキップ）")
 @click.option("--output", "-o", default=None, type=click.Path(), help="出力テキストファイルのパス（省略時: stdout）")
 @click.option("--dry-run", is_flag=True, default=False, help="文字起こしまでを実行して LLM 処理をスキップ（コスト確認用）")
-def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) -> None:
+@click.option("--summarize", "-s", is_flag=True, default=False, help="文字起こし後に Gemini で要約を生成する")
+@click.option("--summary-output", default=None, type=click.Path(), help="要約の出力先ファイルパス（省略時: stdout のみ）")
+def main(url: str | None, audio: str | None, output: str | None, dry_run: bool, summarize: bool, summary_output: str | None) -> None:
     """ChronoIndex: 長尺動画の自動チャプター生成パイプライン"""
 
     if url is None and audio is None:
@@ -77,6 +79,31 @@ def main(url: str | None, audio: str | None, output: str | None, dry_run: bool) 
         for seg in transcript.segments[:10]:
             print(f"  {seg.to_timestamp()}  {seg.text.strip()}")
         return
+
+    # -------------------------------------------------------
+    # Step 2.5: 要約生成（--summarize 指定時のみ）
+    # -------------------------------------------------------
+    if summarize:
+        logger.info("[Step 2.5] 要約生成")
+        from src.summarize import summarize as generate_summary
+        summary = generate_summary(transcript, cfg)
+
+        print("\n" + "=" * 60)
+        print(f"# 要約 ({summary.provider} / {summary.model})")
+        print("=" * 60)
+        print(summary.text)
+
+        if summary_output:
+            summary_out_path = Path(summary_output)
+            summary_out_path.parent.mkdir(parents=True, exist_ok=True)
+            summary_out_path.write_text(summary.text, encoding="utf-8")
+            logger.success(f"要約を保存しました: {summary_output}")
+        elif output is not None:
+            # --output が指定されていれば同じディレクトリに _summary.txt として保存
+            auto_summary_path = Path(output).with_stem(Path(output).stem + "_summary")
+            auto_summary_path.parent.mkdir(parents=True, exist_ok=True)
+            auto_summary_path.write_text(summary.text, encoding="utf-8")
+            logger.success(f"要約を保存しました: {auto_summary_path}")
 
     # -------------------------------------------------------
     # Step 3: セグメント境界検出 + 種別分類
